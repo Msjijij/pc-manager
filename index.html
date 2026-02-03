@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>نظام إدارة الاشتراكات</title>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800&display=swap');
+:root{--primary:#2563eb;--success:#10b981;--warning:#f59e0b;--danger:#ef4444}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Cairo',sans-serif;background:#f9fafb;color:#111827;line-height:1.6}
+.container{max-width:1400px;margin:0 auto;padding:0 24px}
+.header{background:linear-gradient(135deg,var(--primary),#1e40af);color:#fff;padding:24px 0;box-shadow:0 4px 6px rgba(0,0,0,.1)}
+.header-content{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px}
+.logo{display:flex;align-items:center;gap:12px}
+.logo h1{font-size:24px;font-weight:800}
+.logo p{font-size:13px;opacity:.9}
+.btn{padding:12px 24px;border:none;border-radius:8px;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;transition:all .2s;display:inline-flex;align-items:center;gap:8px}
+.btn:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,.15)}
+.btn-primary{background:#fff;color:var(--primary)}
+.btn-secondary{background:rgba(255,255,255,.2);color:#fff}
+.btn-success{background:var(--success);color:#fff}
+.btn-danger{background:var(--danger);color:#fff}
+.btn-warning{background:var(--warning);color:#fff}
+.btn-small{padding:8px 16px;font-size:13px}
+.badge{display:inline-block;padding:6px 12px;border-radius:12px;font-size:12px;font-weight:700}
+.badge-admin{background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff}
+.badge-viewer{background:linear-gradient(135deg,#3b82f6,#2563eb);color:#fff}
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:24px;margin:32px 0}
+.stat-card{background:#fff;border-radius:12px;padding:24px;box-shadow:0 1px 3px rgba(0,0,0,.1);border-left:4px solid;transition:all .2s}
+.stat-card:hover{box-shadow:0 4px 12px rgba(0,0,0,.15);transform:translateY(-4px)}
+.stat-value{font-size:36px;font-weight:800;line-height:1}
+.stat-label{color:#6b7280;font-size:14px;font-weight:600;margin-top:8px}
+.controls{background:#fff;border-radius:12px;padding:24px;margin-bottom:24px;box-shadow:0 1px 3px rgba(0,0,0,.1)}
+.controls-content{display:flex;gap:16px;flex-wrap:wrap}
+.input{padding:12px 16px;border:2px solid #e5e7eb;border-radius:8px;font-family:inherit;font-size:14px;transition:all .2s;flex:1;min-width:200px}
+.input:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px rgba(37,99,235,.1)}
+.clients-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:24px;margin-bottom:32px}
+.client-card{background:#fff;border-radius:12px;padding:24px;box-shadow:0 1px 3px rgba(0,0,0,.1);cursor:pointer;transition:all .2s;border:2px solid transparent}
+.client-card:hover{box-shadow:0 8px 24px rgba(0,0,0,.12);transform:translateY(-4px);border-color:var(--primary)}
+.client-name{font-size:20px;font-weight:700;color:#111827}
+.client-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:16px}
+.client-stat{text-align:center;padding:12px;border-radius:8px}
+.client-stat-value{font-size:24px;font-weight:800;line-height:1}
+.modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;z-index:1000;padding:20px}
+.modal{background:#fff;border-radius:16px;max-width:1200px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+.modal-header{padding:24px;border-bottom:1px solid #e5e7eb;display:flex;justify-content:space-between;align-items:center}
+.modal-title{font-size:24px;font-weight:700}
+.modal-body{padding:24px}
+.device-card{background:#f9fafb;border-radius:12px;padding:20px;border-left:4px solid;margin-bottom:16px}
+.form-group{margin-bottom:20px}
+.form-label{display:block;margin-bottom:8px;font-weight:600;color:#374151;font-size:14px}
+.alert{padding:12px 16px;border-radius:8px;margin-bottom:20px;font-size:14px;font-weight:600}
+.alert-error{background:rgba(239,68,68,.1);color:var(--danger);border:1px solid var(--danger)}
+.alert-success{background:rgba(16,185,129,.1);color:var(--success);border:1px solid var(--success)}
+.alert-info{background:rgba(37,99,235,.1);color:var(--primary);border:1px solid var(--primary)}
+.login-container{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,var(--primary),#1e40af)}
+.login-box{background:#fff;border-radius:16px;padding:48px;max-width:420px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+.login-title{font-size:28px;font-weight:800;text-align:center;margin-bottom:8px}
+.login-subtitle{text-align:center;color:#6b7280;margin-bottom:32px}
+.user-table{width:100%;border-collapse:collapse;margin-top:20px}
+.user-table th,.user-table td{padding:16px;text-align:right;border-bottom:1px solid #e5e7eb}
+.user-table th{background:#f9fafb;font-weight:700;color:#374151}
+.user-table tr:hover{background:#f9fafb}
+.empty-state{text-align:center;padding:60px 20px;color:#9ca3af}
+.link-btn{background:none;border:none;color:var(--primary);font-weight:700;cursor:pointer;text-decoration:underline;font-size:14px}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const {useState,useEffect}=React;
+const t={ar:{app:'نظام إدارة الاشتراكات',login:'تسجيل الدخول',register:'إنشاء حساب',username:'اسم المستخدم',password:'كلمة المرور',confirmPassword:'تأكيد كلمة المرور',logout:'تسجيل الخروج',admin:'مدير',viewer:'مشاهد',clients:'إجمالي العملاء',active:'أجهزة نشطة',expiring:'تنتهي قريباً',expired:'منتهية',addClient:'إضافة عميل',search:'البحث...',addDevice:'إضافة جهاز',deviceName:'اسم الجهاز',duration:'المدة',notes:'ملاحظات',save:'حفظ',cancel:'إلغاء',delete:'حذف',renew:'تجديد',manageUsers:'إدارة المستخدمين',addAdmin:'إضافة أدمن',makeAdmin:'جعله أدمن',makeViewer:'جعله مشاهد',noAccount:'ليس لديك حساب؟',hasAccount:'لديك حساب؟',registerSuccess:'تم إنشاء الحساب بنجاح!',loginError:'اسم المستخدم أو كلمة المرور غير صحيحة',usernameExists:'اسم المستخدم موجود',passwordMismatch:'كلمات المرور غير متطابقة',viewOnly:'وضع المشاهدة فقط'}};
+
+function App(){
+const[user,setUser]=useState(null);
+const[clients,setClients]=useState([]);
+const[showLogin,setShowLogin]=useState(true);
+const[showRegister,setShowRegister]=useState(false);
+const[showUsers,setShowUsers]=useState(false);
+const[showClient,setShowClient]=useState(false);
+const[showDevice,setShowDevice]=useState(false);
+const[selected,setSelected]=useState(null);
+const[search,setSearch]=useState('');
+const[msg,setMsg]=useState({type:'',text:''});
+const ADMIN='M7-511';
+
+const store={
+get:k=>{try{const v=localStorage.getItem(k);return v?JSON.parse(v):null}catch{return null}},
+set:(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch{}}
+};
+
+useEffect(()=>{
+const u=store.get('sms_user');
+if(u){setUser(u);setShowLogin(false)}
+setClients(store.get('sms_clients')||[]);
+},[]);
+
+const handleLogin=e=>{
+e.preventDefault();
+setMsg({type:'',text:''});
+const u=e.target.username.value;
+const p=e.target.password.value;
+if(u===ADMIN&&p==='M12m12m12'){
+const user={username:u,role:'admin'};
+store.set('sms_user',user);
+setUser(user);
+setShowLogin(false);
+return;
+}
+const users=store.get('sms_users')||[];
+const found=users.find(x=>x.username===u&&x.password===p);
+if(found){
+const user={username:found.username,role:found.role};
+store.set('sms_user',user);
+setUser(user);
+setShowLogin(false);
+}else{
+setMsg({type:'error',text:t.ar.loginError});
+}
+};
+
+const handleRegister=e=>{
+e.preventDefault();
+setMsg({type:'',text:''});
+const u=e.target.username.value;
+const p=e.target.password.value;
+const c=e.target.confirmPassword.value;
+if(u.length<3||p.length<6){
+setMsg({type:'error',text:'اسم المستخدم أو كلمة المرور قصيرة'});
+return;
+}
+if(p!==c){
+setMsg({type:'error',text:t.ar.passwordMismatch});
+return;
+}
+const users=store.get('sms_users')||[];
+if(users.find(x=>x.username===u)||u===ADMIN){
+setMsg({type:'error',text:t.ar.usernameExists});
+return;
+}
+users.push({username:u,password:p,role:'viewer'});
+store.set('sms_users',users);
+setMsg({type:'success',text:t.ar.registerSuccess});
+setTimeout(()=>{setShowRegister(false);setMsg({type:'',text:''})},1500);
+};
+
+const handleAddClient=e=>{
+e.preventDefault();
+const name=e.target.clientName.value;
+const newClients=[...clients,{id:Date.now(),name,devices:[]}];
+store.set('sms_clients',newClients);
+setClients(newClients);
+setShowClient(false);
+};
+
+const handleAddDevice=e=>{
+e.preventDefault();
+const name=e.target.deviceName.value;
+const days=e.target.duration.value==='custom'?e.target.customDays.value:e.target.duration.value;
+const start=new Date().toISOString().split('T')[0];
+const end=new Date(Date.now()+days*24*60*60*1000).toISOString().split('T')[0];
+const device={id:Date.now(),name,startDate:start,endDate:end,duration:parseInt(days),notes:e.target.notes.value};
+const updated=clients.map(c=>c.id===selected.id?{...c,devices:[...(c.devices||[]),device]}:c);
+store.set('sms_clients',updated);
+setClients(updated);
+setSelected({...selected,devices:[...(selected.devices||[]),device]});
+setShowDevice(false);
+};
+
+const handleAddAdmin=e=>{
+e.preventDefault();
+const u=e.target.newAdminUsername.value;
+const p=e.target.newAdminPassword.value;
+if(u.length<3||p.length<6)return;
+const users=store.get('sms_users')||[];
+if(users.find(x=>x.username===u)||u===ADMIN)return alert(t.ar.usernameExists);
+users.push({username:u,password:p,role:'admin'});
+store.set('sms_users',users);
+e.target.reset();
+};
+
+const changeRole=(u,role)=>{
+const users=store.get('sms_users')||[];
+const updated=users.map(x=>x.username===u?{...x,role}:x);
+store.set('sms_users',updated);
+setShowUsers(false);
+setTimeout(()=>setShowUsers(true),100);
+};
+
+const deleteUser=u=>{
+if(!confirm('حذف المستخدم؟'))return;
+const users=(store.get('sms_users')||[]).filter(x=>x.username!==u);
+store.set('sms_users',users);
+setShowUsers(false);
+setTimeout(()=>setShowUsers(true),100);
+};
+
+const deleteClient=id=>{
+if(!confirm('حذف العميل؟'))return;
+const updated=clients.filter(c=>c.id!==id);
+store.set('sms_clients',updated);
+setClients(updated);
+setSelected(null);
+};
+
+const deleteDevice=id=>{
+if(!confirm('حذف الجهاز؟'))return;
+const updated=clients.map(c=>c.id===selected.id?{...c,devices:c.devices.filter(d=>d.id!==id)}:c);
+store.set('sms_clients',updated);
+setClients(updated);
+setSelected({...selected,devices:selected.devices.filter(d=>d.id!==id)});
+};
+
+const renewDevice=id=>{
+const device=selected.devices.find(d=>d.id===id);
+const start=new Date().toISOString().split('T')[0];
+const end=new Date(Date.now()+device.duration*24*60*60*1000).toISOString().split('T')[0];
+const updated=clients.map(c=>c.id===selected.id?{...c,devices:c.devices.map(d=>d.id===id?{...d,startDate:start,endDate:end}:d)}:c);
+store.set('sms_clients',updated);
+setClients(updated);
+setSelected({...selected,devices:selected.devices.map(d=>d.id===id?{...d,startDate:start,endDate:end}:d)});
+};
+
+const getStatus=end=>{
+const today=new Date();
+today.setHours(0,0,0,0);
+const e=new Date(end);
+e.setHours(0,0,0,0);
+const diff=Math.ceil((e-today)/(1000*60*60*24));
+if(diff<0)return{status:'منتهي',color:'var(--danger)',days:Math.abs(diff),type:'expired'};
+if(diff<=2)return{status:'قريب',color:'var(--warning)',days:diff,type:'expiring'};
+return{status:'نشط',color:'var(--success)',days:diff,type:'active'};
+};
+
+const getStats=c=>{
+const devs=c.devices||[];
+return{
+total:devs.length,
+active:devs.filter(d=>getStatus(d.endDate).type==='active').length,
+expiring:devs.filter(d=>getStatus(d.endDate).type==='expiring').length,
+expired:devs.filter(d=>getStatus(d.endDate).type==='expired').length
+};
+};
+
+const globalStats=()=>{
+const stats={clients:clients.length,active:0,expiring:0,expired:0};
+clients.forEach(c=>{
+const s=getStats(c);
+stats.active+=s.active;
+stats.expiring+=s.expiring;
+stats.expired+=s.expired;
+});
+return stats;
+};
+
+const filtered=clients.filter(c=>c.name.toLowerCase().includes(search.toLowerCase()));
+const stats=globalStats();
+const isAdmin=user?.role==='admin';
+
+if(showLogin){
+return(
+<div className="login-container">
+<div className="login-box">
+<h1 className="login-title">{showRegister?t.ar.register:t.ar.login}</h1>
+<p className="login-subtitle">{t.ar.app}</p>
+{msg.text&&<div className={`alert alert-${msg.type}`}>{msg.text}</div>}
+{!showRegister?(
+<form onSubmit={handleLogin}>
+<div className="form-group">
+<label className="form-label">{t.ar.username}</label>
+<input name="username" className="input" required/>
+</div>
+<div className="form-group">
+<label className="form-label">{t.ar.password}</label>
+<input name="password" type="password" className="input" required/>
+</div>
+<button type="submit" className="btn btn-primary" style={{width:'100%',marginBottom:'16px'}}>{t.ar.login}</button>
+<div style={{textAlign:'center'}}>
+<span style={{color:'#6b7280',fontSize:'14px'}}>{t.ar.noAccount} </span>
+<button type="button" className="link-btn" onClick={()=>{setShowRegister(true);setMsg({type:'',text:''})}}>{t.ar.register}</button>
+</div>
+</form>
+):(
+<form onSubmit={handleRegister}>
+<div className="form-group">
+<label className="form-label">{t.ar.username}</label>
+<input name="username" className="input" required minLength="3"/>
+</div>
+<div className="form-group">
+<label className="form-label">{t.ar.password}</label>
+<input name="password" type="password" className="input" required minLength="6"/>
+</div>
+<div className="form-group">
+<label className="form-label">{t.ar.confirmPassword}</label>
+<input name="confirmPassword" type="password" className="input" required minLength="6"/>
+</div>
+<button type="submit" className="btn btn-success" style={{width:'100%',marginBottom:'16px'}}>{t.ar.register}</button>
+<div style={{textAlign:'center'}}>
+<span style={{color:'#6b7280',fontSize:'14px'}}>{t.ar.hasAccount} </span>
+<button type="button" className="link-btn" onClick={()=>{setShowRegister(false);setMsg({type:'',text:''})}}>{t.ar.login}</button>
+</div>
+</form>
+)}
+</div>
+</div>
+);
+}
+
+return(
+<div>
+<header className="header">
+<div className="container">
+<div className="header-content">
+<div className="logo">
+<h1>{t.ar.app}</h1>
+</div>
+<div style={{display:'flex',gap:'12px',alignItems:'center',flexWrap:'wrap'}}>
+{isAdmin&&<button className="btn btn-primary" onClick={()=>setShowUsers(true)}>{t.ar.manageUsers}</button>}
+<span className={`badge ${isAdmin?'badge-admin':'badge-viewer'}`}>{isAdmin?t.ar.admin:t.ar.viewer}: {user.username}</span>
+<button className="btn btn-secondary" onClick={()=>{store.set('sms_user',null);setUser(null);setShowLogin(true)}}>{t.ar.logout}</button>
+</div>
+</div>
+</div>
+</header>
+
+<main className="container">
+{!isAdmin&&<div className="alert alert-info" style={{marginTop:'24px'}}>{t.ar.viewOnly}</div>}
+
+<div className="stats-grid">
+<div className="stat-card" style={{borderLeftColor:'var(--primary)'}}>
+<div className="stat-value" style={{color:'var(--primary)'}}>{stats.clients}</div>
+<div className="stat-label">{t.ar.clients}</div>
+</div>
+<div className="stat-card" style={{borderLeftColor:'var(--success)'}}>
+<div className="stat-value" style={{color:'var(--success)'}}>{stats.active}</div>
+<div className="stat-label">{t.ar.active}</div>
+</div>
+<div className="stat-card" style={{borderLeftColor:'var(--warning)'}}>
+<div className="stat-value" style={{color:'var(--warning)'}}>{stats.expiring}</div>
+<div className="stat-label">{t.ar.expiring}</div>
+</div>
+<div className="stat-card" style={{borderLeftColor:'var(--danger)'}}>
+<div className="stat-value" style={{color:'var(--danger)'}}>{stats.expired}</div>
+<div className="stat-label">{t.ar.expired}</div>
+</div>
+</div>
+
+<div className="controls">
+<div className="controls-content">
+{isAdmin&&<button className="btn btn-primary" onClick={()=>setShowClient(true)}>{t.ar.addClient}</button>}
+<input className="input" placeholder={t.ar.search} value={search} onChange={e=>setSearch(e.target.value)}/>
+</div>
+</div>
+
+{filtered.length===0?(
+<div className="empty-state">لا يوجد عملاء</div>
+):(
+<div className="clients-grid">
+{filtered.map(c=>{
+const s=getStats(c);
+return(
+<div key={c.id} className="client-card" onClick={()=>setSelected(c)}>
+<div style={{display:'flex',justifyContent:'space-between',marginBottom:'16px'}}>
+<h3 className="client-name">{c.name}</h3>
+<span style={{background:'#f3f4f6',padding:'6px 12px',borderRadius:'20px',fontSize:'13px',fontWeight:'700'}}>{s.total} جهاز</span>
+</div>
+<div className="client-stats">
+<div className="client-stat" style={{background:'rgba(16,185,129,.1)'}}>
+<div className="client-stat-value" style={{color:'var(--success)'}}>{s.active}</div>
+<div style={{fontSize:'11px',color:'#6b7280',marginTop:'4px',fontWeight:'600'}}>نشط</div>
+</div>
+<div className="client-stat" style={{background:'rgba(245,158,11,.1)'}}>
+<div className="client-stat-value" style={{color:'var(--warning)'}}>{s.expiring}</div>
+<div style={{fontSize:'11px',color:'#6b7280',marginTop:'4px',fontWeight:'600'}}>قريب</div>
+</div>
+<div className="client-stat" style={{background:'rgba(239,68,68,.1)'}}>
+<div className="client-stat-value" style={{color:'var(--danger)'}}>{s.expired}</div>
+<div style={{fontSize:'11px',color:'#6b7280',marginTop:'4px',fontWeight:'600'}}>منتهي</div>
+</div>
+</div>
+{isAdmin&&(
+<div onClick={e=>e.stopPropagation()} style={{marginTop:'16px'}}>
+<button className="btn btn-danger btn-small" onClick={()=>deleteClient(c.id)}>{t.ar.delete}</button>
+</div>
+)}
+</div>
+);
+})}
+</div>
+)}
+</main>
+
+{selected&&(
+<div className="modal-overlay" onClick={()=>setSelected(null)}>
+<div className="modal" onClick={e=>e.stopPropagation()}>
+<div className="modal-header">
+<h2 className="modal-title">{selected.name}</h2>
+<button style={{background:'none',border:'none',fontSize:'24px',cursor:'pointer'}} onClick={()=>setSelected(null)}>×</button>
+</div>
+<div className="modal-body">
+{isAdmin&&<button className="btn btn-primary" onClick={()=>setShowDevice(true)} style={{marginBottom:'20px'}}>{t.ar.addDevice}</button>}
+{!selected.devices||selected.devices.length===0?(
+<div className="empty-state">لا توجد أجهزة</div>
+):(
+selected.devices.map(d=>{
+const st=getStatus(d.endDate);
+return(
+<div key={d.id} className="device-card" style={{borderLeftColor:st.color}}>
+<div style={{display:'flex',justifyContent:'space-between',marginBottom:'12px'}}>
+<h4 style={{fontSize:'16px',fontWeight:'700'}}>{d.name}</h4>
+<span style={{padding:'6px 12px',borderRadius:'20px',fontSize:'12px',fontWeight:'700',background:st.color+'20',color:st.color}}>{st.status}</span>
+</div>
+<div style={{fontSize:'13px',marginBottom:'12px'}}>
+<div>بداية: {d.startDate}</div>
+<div>نهاية: {d.endDate}</div>
+<div style={{color:st.color,fontWeight:'700'}}>متبقي: {st.days} يوم</div>
+</div>
+{d.notes&&<div style={{padding:'8px',background:'#f3f4f6',borderRadius:'6px',fontSize:'13px',marginBottom:'12px'}}>{d.notes}</div>}
+{isAdmin&&(
+<div style={{display:'flex',gap:'8px'}}>
+<button className="btn btn-success btn-small" onClick={()=>renewDevice(d.id)}>{t.ar.renew}</button>
+<button className="btn btn-danger btn-small" onClick={()=>deleteDevice(d.id)}>{t.ar.delete}</button>
+</div>
+)}
+</div>
+);
+})
+)}
+</div>
+</div>
+</div>
+)}
+
+{showUsers&&(
+<div className="modal-overlay" onClick={()=>setShowUsers(false)}>
+<div className="modal" onClick={e=>e.stopPropagation()} style={{maxWidth:'900px'}}>
+<div className="modal-header">
+<h2 className="modal-title">{t.ar.manageUsers}</h2>
+<button style={{background:'none',border:'none',fontSize:'24px',cursor:'pointer'}} onClick={()=>setShowUsers(false)}>×</button>
+</div>
+<div className="modal-body">
+<form onSubmit={handleAddAdmin} style={{marginBottom:'30px',padding:'20px',background:'#f9fafb',borderRadius:'12px'}}>
+<h3 style={{marginBottom:'16px',fontSize:'18px',fontWeight:'700'}}>{t.ar.addAdmin}</h3>
+<div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(250px,1fr))',gap:'20px'}}>
+<div className="form-group">
+<label className="form-label">{t.ar.username}</label>
+<input name="newAdminUsername" className="input" required minLength="3"/>
+</div>
+<div className="form-group">
+<label className="form-label">{t.ar.password}</label>
+<input name="newAdminPassword" type="password" className="input" required minLength="6"/>
+</div>
+</div>
+<button type="submit" className="btn btn-success">{t.ar.addAdmin}</button>
+</form>
+<table className="user-table">
+<thead>
+<tr>
+<th>{t.ar.username}</th>
+<th>الدور</th>
+<th>الإجراءات</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style={{fontWeight:'700'}}>{ADMIN}</td>
+<td><span className="badge badge-admin">الأدمن الرئيسي</span></td>
+<td>-</td>
+</tr>
+{(store.get('sms_users')||[]).map(u=>(
+<tr key={u.username}>
+<td>{u.username}</td>
+<td><span className={`badge ${u.role==='admin'?'badge-admin':'badge-viewer'}`}>{u.role==='admin'?t.ar.admin:t.ar.viewer}</span></td>
+<td>
+<div style={{display:'flex',gap:'8px'}}>
+{u.role==='viewer'?(
+<button className="btn btn-warning btn-small" onClick={()=>changeRole(u.username,'admin')}>{t.ar.makeAdmin}</button>
+):(
+<button className="btn btn-secondary btn-small" onClick={()=>changeRole(u.username,'viewer')}>{t.ar.makeViewer}</button>
+)}
+<button className="btn btn-danger btn-small" onClick={()=>deleteUser(u.username)}>{t.ar.delete}</button>
+</div>
+</td>
+</tr>
+))}
+</tbody>
+</table>
+</div>
+</div>
+</div>
+)}
+
+{showClient&&(
+<div className="modal-overlay" onClick={()=>setShowClient(false)}>
+<div className="modal" onClick={e=>e.stopPropagation()} style={{maxWidth:'500px'}}>
+<div className="modal-header">
+<h2 className="modal-title">{t.ar.addClient}</h2>
+<button style={{background:'none',border:'none',fontSize:'24px',cursor:'pointer'}} onClick={()=>setShowClient(false)}>×</button>
+</div>
+<div className="modal-body">
+<form onSubmit={handleAddClient}>
+<div className="form-group">
+<label className="form-label">اسم العميل</label>
+<input name="clientName" className="input" required/>
+</div>
+<div style={{display:'flex',gap:'12px'}}>
+<button type="submit" className="btn btn-success">{t.ar.save}</button>
+<button type="button" className="btn btn-secondary" onClick={()=>setShowClient(false)}>{t.ar.cancel}</button>
+</div>
+</form>
+</div>
+</div>
+</div>
+)}
+
+{showDevice&&(
+<div className="modal-overlay" onClick={()=>setShowDevice(false)}>
+<div className="modal" onClick={e=>e.stopPropagation()} style={{maxWidth:'600px'}}>
+<div className="modal-header">
+<h2 className="modal-title">{t.ar.addDevice}</h2>
+<button style={{background:'none',border:'none',fontSize:'24px',cursor:'pointer'}} onClick={()=>setShowDevice(false)}>×</button>
+</div>
+<div className="modal-body">
+<form onSubmit={handleAddDevice}>
+<div className="form-group">
+<label className="form-label">{t.ar.deviceName}</label>
+<input name="deviceName" className="input" required/>
+</div>
+<div className="form-group">
+<label className="form-label">{t.ar.duration}</label>
+<select name="duration" className="input">
+<option value="1">يوم واحد</option>
+<option value="7">أسبوع</option>
+<option value="30">شهر</option>
+<option value="custom">مخصص</option>
+</select>
+</div>
+<div className="form-group">
+<label className="form-label">عدد الأيام (للمخصص)</label>
+<input name="customDays" type="number" min="1" className="input"/>
+</div>
+<div className="form-group">
+<label className="form-label">{t.ar.notes}</label>
+<textarea name="notes" className="input" rows="3"></textarea>
+</div>
+<div style={{display:'flex',gap:'12px'}}>
+<button type="submit" className="btn btn-success">{t.ar.save}</button>
+<button type="button" className="btn btn-secondary" onClick={()=>setShowDevice(false)}>{t.ar.cancel}</button>
+</div>
+</form>
+</div>
+</div>
+</div>
+)}
+</div>
+);
+}
+
+ReactDOM.render(<App/>,document.getElementById('root'));
+</script>
+</body>
+</html>
